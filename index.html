@@ -48,3 +48,109 @@
       background: white;
     }
     th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #FFC107;
+      color: white;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+<header>
+  Welcome, Oka Hanuraga
+</header>
+
+<div class="container">
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search for item, serial or WO NO..." />
+    <button class="register-btn" onclick="alert('Redirect to registration form')">REGISTER PRODUCT</button>
+  </div>
+
+  <h2 id="wipCount">Work In Progress (0)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>WO NO</th>
+        <th>Customer</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Arrival</th>
+        <th>Inspection</th>
+        <th>Release</th>
+        <th>Part Name</th>
+        <th>Job Type</th>
+        <th>TAT</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Dynamic rows go here -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoX9u7c9rYAd2CqlNj8VOoPtCyDoOjTmDgO_BwIfqGha8rA8bRB9vHUYF8UvnBrZh7zqUyFoTCRI6x/pub?output=csv";
+  const searchInput = document.getElementById("searchInput");
+  const tableBody = document.getElementById("tableBody");
+  const wipCountEl = document.getElementById("wipCount");
+
+  let allData = [];
+
+  function renderTable(data) {
+    tableBody.innerHTML = "";
+    let wipCount = 0;
+
+    data.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row["WO NO"] || ""}</td>
+        <td>${row["Customer"] || ""}</td>
+        <td>${row["Description"] || ""}</td>
+        <td>${row["Status"] || ""}</td>
+        <td>${row["Arrival"] || ""}</td>
+        <td>${row["Inspection"] || ""}</td>
+        <td>${row["Release"] || ""}</td>
+        <td>${row["Part Name"] || ""}</td>
+        <td>${row["Job Type"] || ""}</td>
+        <td>${row["TAT"] || ""}</td>
+      `;
+      tableBody.appendChild(tr);
+      if ((row["Status"] || "").toUpperCase() === "WIP") wipCount++;
+    });
+
+    wipCountEl.textContent = `Work In Progress (${wipCount})`;
+  }
+
+  function filterData() {
+    const term = searchInput.value.toLowerCase();
+    const filtered = allData.filter(row =>
+      Object.values(row).some(val => val?.toString().toLowerCase().includes(term))
+    );
+    renderTable(filtered);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        allData = results.data;
+        renderTable(allData);
+      },
+      error: function(err) {
+        console.error("CSV Load Error:", err);
+      }
+    });
+
+    searchInput.addEventListener("input", filterData);
+  });
+</script>
+
+</body>
+</html>
